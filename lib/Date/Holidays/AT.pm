@@ -97,7 +97,9 @@ sub holidays {
     $holiday{'fron'} = _date2timestamp($j_fron, $m_fron, $t_fron);
 
     # Common holidays througout Austria
-    @{ $holidays{'common'} } = qw(neuj hl3k tdar mahi nati alhe maem chri stef);
+    foreach my $hday (qw(neuj hl3k tdar mahi nati alhe maem chri stef)) {
+        $holidays{$hday} = $holiday{$hday};
+    }
 
     # Build list for returning
     #
@@ -106,8 +108,11 @@ sub holidays {
     # the ADD parameter
     if ($parameters{'ADD'}) {
         foreach my $add (@{ $parameters{'ADD'} }) {
-            $holiday{$add} = $holiday{$add};
+            $holidays{$add} = $holiday{$add};
         }
+    } else {
+        # If no ADD Parameter given, add all holidays not to break old behavior
+        %holidays = %holiday;
     }
 
     # If WEEKENDS => 0 was passed, weed out holidays on weekends
@@ -115,17 +120,17 @@ sub holidays {
     unless (1 == $parameters{'WEEKENDS'}) {
 
         # Walk the list of holidays
-        foreach my $alias (keys(%holiday)) {
+        foreach my $alias (keys(%holidays)) {
 
             # Get day of week. Since we're no longer
             # in Date::Calc's world, use localtime()
-            my $dow = (localtime($holiday{$alias}))[6];
+            my $dow = (localtime($holidays{$alias}))[6];
 
             # dow 6 = Saturday, dow 0 = Sunday
             if ((6 == $dow) or (0 == $dow)) {
 
                 # Kick this day from the list
-                delete $holiday{$alias};
+                delete $holidays{$alias};
             }
         }
     }
@@ -133,19 +138,19 @@ sub holidays {
     # Sort values stored in the hash for returning
     #
     my @returnlist;
-    foreach (sort { $holiday{$a} <=> $holiday{$b} } (keys(%holiday))) {
+    foreach (sort { $holidays{$a} <=> $holidays{$b} } (keys(%holidays))) {
 
         # See if this platform has strftime(%s)
         # if not, inject seconds manually into format string.
         my $formatstring = $parameters{'FORMAT'};
-        if (strftime('%s', localtime($holiday{$_})) eq '%s') {
-            $formatstring =~ s/%{0}%s/$holiday{$_}/g;
+        if (strftime('%s', localtime($holidays{$_})) eq '%s') {
+            $formatstring =~ s/%{0}%s/$holidays{$_}/g;
         }
 
         # Inject the holiday's alias name into the format string
         # if it was requested by adding %#.
         $formatstring =~ s/%{0}%#/$_/;
-        push @returnlist, strftime($formatstring, localtime($holiday{$_}));
+        push @returnlist, strftime($formatstring, localtime($holidays{$_}));
     }
     return \@returnlist;
 }
