@@ -97,7 +97,7 @@ sub holidays {
     $holiday{'fron'} = _date2timestamp($j_fron, $m_fron, $t_fron);
 
     # Common holidays througout Austria
-    @{ $holidays{'common'} } = qw(neuj hl3k tdar mahi nati alhe mart maem chri stef);
+    @{ $holidays{'common'} } = qw(neuj hl3k tdar mahi nati alhe maem chri stef);
 
     # Build list for returning
     #
